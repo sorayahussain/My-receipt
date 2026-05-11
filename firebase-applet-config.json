@@ -7,4 +7,4 @@ const firebaseConfig = {
   "storageBucket": "myreceipt-c7472.firebasestorage.app",
   "messagingSenderId": "698346455512",
   "measurementId": "G-G1604B9C28"
-}
+};
