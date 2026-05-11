@@ -1,7 +1,7 @@
  {
   "projectId": "myreceipt-c7472",
   "appId": "1:698346455512:web:4e231c2b99211d776932ad",
-  "apiKey": "FIRESTORE_API_KEY",
+  "apiKey": 'env.FIRESTORE_API_KEY',
   "authDomain": "myreceipt-c7472.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-244b6cde-c019-4e43-9abc-018e262dbc1e",
   "storageBucket": "myreceipt-c7472.firebasestorage.app",
