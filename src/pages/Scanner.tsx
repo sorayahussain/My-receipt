@@ -396,13 +396,13 @@ export default function Scanner() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <header className="mb-6 md:mb-12 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="mb-6 md:mb-12 flex flex-row items-center justify-between gap-4 px-1">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
-            <Receipt className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-2 md:gap-3">
+            <Receipt className="w-5 h-5 md:w-8 md:h-8 text-blue-600" />
             Scanner 💰
           </h1>
-          <p className="text-sm md:text-base text-gray-500 mt-1 md:mt-2">Upload or capture a receipt to get started. 💸</p>
+          <p className="text-[10px] md:text-base text-gray-500 mt-0.5 md:mt-2">Scan it. Save it. Done. 💸</p>
         </div>
         {state !== AppState.IDLE && (
           <button 
@@ -479,11 +479,11 @@ export default function Scanner() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
+              className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6 px-1"
             >
               <div 
                 onClick={() => !selectionSuccess && fileInputRef.current?.click()}
-                className={`group relative cursor-pointer overflow-hidden rounded-[2rem] bg-white border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center gap-4 md:gap-6 h-[200px] md:h-[300px] ${
+                className={`group relative cursor-pointer overflow-hidden rounded-[1.5rem] md:rounded-[2rem] bg-white border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center gap-3 md:gap-6 h-[160px] md:h-[300px] ${
                   selectionSuccess ? 'border-emerald-500 bg-emerald-50 shadow-inner' : 'border-gray-200 hover:border-blue-400'
                 }`}
               >
@@ -528,7 +528,7 @@ export default function Scanner() {
 
               <div 
                 onClick={() => !selectionSuccess && cameraInputRef.current?.click()}
-                className={`group relative cursor-pointer overflow-hidden rounded-[2rem] bg-white border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center gap-4 md:gap-6 h-[200px] md:h-[300px] ${
+                className={`group relative cursor-pointer overflow-hidden rounded-[1.5rem] md:rounded-[2rem] bg-white border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center gap-3 md:gap-6 h-[160px] md:h-[300px] ${
                   selectionSuccess ? 'border-emerald-500 bg-emerald-50 shadow-inner' : 'border-gray-200 hover:border-emerald-400'
                 }`}
               >
@@ -667,9 +667,9 @@ export default function Scanner() {
               </div>
 
               {/* Details Section */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col">
-                <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+              <div className="bg-white rounded-3xl p-4 md:p-8 shadow-sm border border-gray-100 flex flex-col">
+                <div className="flex justify-between items-center mb-6 md:mb-8">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 px-1">
                     {isEditing ? 'Edit Details' : 'Review Details'}
                   </h3>
                 </div>
@@ -702,24 +702,24 @@ export default function Scanner() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
+                        <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase flex items-center gap-1 md:gap-2">
                           <Calendar className="w-3 h-3" /> Date
                         </label>
                         <input 
                           type="date" 
                           value={receiptData.date}
                           onChange={(e) => handleUpdateField('date', e.target.value)}
-                          className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-blue-100 border rounded-xl outline-none transition-all font-medium"
+                          className="w-full px-3 md:px-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-blue-100 border rounded-xl outline-none transition-all font-medium text-xs md:text-base"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
+                        <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase flex items-center gap-1 md:gap-2">
                           <DollarSign className="w-3 h-3" /> Total
                         </label>
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">
+                          <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm md:text-lg">
                             {CURRENCY_SYMBOLS[receiptData.currency] || receiptData.currency}
                           </span>
                           <input 
@@ -727,7 +727,7 @@ export default function Scanner() {
                             step="0.01"
                             value={receiptData.totalAmount}
                             onChange={(e) => handleUpdateField('totalAmount', parseFloat(e.target.value))}
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-blue-100 border rounded-xl outline-none transition-all font-bold text-lg"
+                            className="w-full pl-8 md:pl-12 pr-3 md:pr-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-blue-100 border rounded-xl outline-none transition-all font-bold text-sm md:text-lg"
                           />
                         </div>
                       </div>
@@ -861,24 +861,24 @@ export default function Scanner() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                          <Calendar className="w-5 h-5" />
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                      <div className="flex items-start gap-2 md:gap-4 p-3 md:p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                          <Calendar className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Date</p>
-                          <p className="text-sm font-bold text-gray-900">{receiptData.date || 'No Date'}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 md:mb-1">Date</p>
+                          <p className="text-xs md:text-sm font-bold text-gray-900">{receiptData.date || 'No Date'}</p>
                         </div>
                       </div>
                       
-                      <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group">
-                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                          <DollarSign className="w-5 h-5" />
+                      <div className="flex items-start gap-2 md:gap-4 p-3 md:p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                          <DollarSign className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                         <div>
-                          <div className="flex items-center gap-1 mb-1">
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Amount</p>
+                          <div className="flex items-center gap-1 mb-0.5 md:mb-1">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Amount</p>
                             {receiptData.currencyConfidence < 0.8 && (
                               <div className="group relative">
                                 <AlertCircle className="w-3 h-3 text-amber-500 cursor-help" />
@@ -888,9 +888,9 @@ export default function Scanner() {
                               </div>
                             )}
                           </div>
-                          <p className="text-lg font-bold text-gray-900">
+                          <p className="text-sm md:text-lg font-bold text-gray-900 truncate max-w-[80px] xs:max-w-none">
                             {CURRENCY_SYMBOLS[receiptData.currency] || ''} {receiptData.totalAmount.toFixed(2)}
-                            <span className="ml-1 text-[10px] text-gray-400">{receiptData.currency}</span>
+                            <span className="ml-1 text-[8px] md:text-[10px] text-gray-400">{receiptData.currency}</span>
                           </p>
                         </div>
                       </div>

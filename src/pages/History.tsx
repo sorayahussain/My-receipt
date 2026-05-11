@@ -109,8 +109,12 @@ export default function History() {
         exportReceipts = exportReceipts.filter(r => r.category === exportOptions.category);
       }
 
+      // Sort by date ascending for the report
+      exportReceipts.sort((a, b) => a.date.localeCompare(b.date));
+
       if (exportReceipts.length === 0) {
         alert('No receipts found matching the selected filters.');
+        setIsExporting(false);
         return;
       }
 
@@ -119,14 +123,31 @@ export default function History() {
         auth.currentUser?.displayName || auth.currentUser?.email || 'User',
         { type: exportOptions.type }
       );
-      setShowExportModal(false);
+      
+      // Keep loading for a moment for better UX
+      setTimeout(() => {
+        setIsExporting(false);
+        setShowExportModal(false);
+      }, 500);
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to generate PDF. Please try again.');
-    } finally {
       setIsExporting(false);
     }
   };
+
+  const getExportSummary = () => {
+    let filtered = [...receipts];
+    if (exportOptions.startDate) filtered = filtered.filter(r => r.date >= exportOptions.startDate);
+    if (exportOptions.endDate) filtered = filtered.filter(r => r.date <= exportOptions.endDate);
+    if (exportOptions.category !== 'All') filtered = filtered.filter(r => r.category === exportOptions.category);
+    
+    const count = filtered.length;
+    const total = filtered.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
+    return { count, total };
+  };
+
+  const { count: exportCount, total: exportTotal } = getExportSummary();
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -277,18 +298,25 @@ export default function History() {
 
                 <button 
                   onClick={handleExportPDF}
-                  disabled={isExporting}
-                  className="w-full py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3"
+                  disabled={isExporting || exportCount === 0}
+                  className="w-full py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale flex flex-col items-center justify-center gap-1"
                 >
                   {isExporting ? (
-                    <>
+                    <div className="flex items-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Generating...
-                    </>
+                      <span>Generating Report...</span>
+                    </div>
                   ) : (
                     <>
-                      <Download className="w-5 h-5" />
-                      Download Report
+                      <div className="flex items-center gap-2">
+                        <Download className="w-5 h-5" />
+                        <span>Download Report</span>
+                      </div>
+                      {exportCount > 0 && (
+                        <span className="text-[10px] opacity-70 font-bold uppercase tracking-widest">
+                          {exportCount} items • ${exportTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                      )}
                     </>
                   )}
                 </button>
@@ -299,36 +327,38 @@ export default function History() {
       </AnimatePresence>
 
       {/* Header & Stats */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 px-1">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-            <ReceiptIcon className="w-8 h-8 text-blue-600" />
-            Receipt History
+          <h1 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2 md:gap-3">
+            <ReceiptIcon className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+            History
           </h1>
-          <p className="text-gray-500 mt-2 font-medium">Keep track of your spending and digital receipts.</p>
+          <p className="text-xs md:text-base text-gray-500 mt-1 md:mt-2 font-medium">Your digital receipt archive. 🏛️</p>
         </div>
         
-        <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-            <TrendingUp className="w-6 h-6" />
+        <div className="flex items-center gap-3 md:gap-6">
+          <div className="flex-1 bg-white p-3 md:p-4 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 rounded-xl md:rounded-2xl flex items-center justify-center text-emerald-600 shrink-0">
+              <TrendingUp className="w-5 h-5 md:w-6 md:h-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
+              <p className="text-lg md:text-2xl font-black text-gray-900 leading-tight">
+                ${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Tracked</p>
-            <p className="text-2xl font-black text-gray-900 leading-tight">
-              ${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </div>
-        </div>
 
-        <button 
-          onClick={() => setShowExportModal(true)}
-          className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3 hover:bg-gray-50 transition-all font-bold text-gray-700 active:scale-95"
-        >
-          <div className="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-            <Download className="w-5 h-5" />
-          </div>
-          <span className="hidden sm:inline">Export PDF</span>
-        </button>
+          <button 
+            onClick={() => setShowExportModal(true)}
+            className="bg-white p-3 md:p-4 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm flex items-center gap-2 md:gap-3 hover:bg-gray-50 transition-all font-bold text-gray-700 active:scale-95"
+          >
+            <div className="w-10 h-10 md:w-10 md:h-10 bg-blue-50 rounded-xl md:rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
+              <Download className="w-5 h-5" />
+            </div>
+            <span className="hidden sm:inline">Export PDF</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters & Search */}
