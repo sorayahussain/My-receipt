@@ -1,0 +1,4 @@
+      - name: Create .env file
+        run: |
+          echo "FIRESTORE_API_KEY=${{ secrets.API_KEY_FIRESTORE }}" > .env
+          echo "GEMINI_API_KEY=${{ secrets.MY_GEMINI_API_KEY }}" > .env
