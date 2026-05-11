@@ -9,6 +9,9 @@ Follow these steps to get the application running locally:
 1. **Install Dependencies**:
    ```bash
    npm install
+   npm install firebase@12.13.0 --save
+   import { initializeApp } from "firebase/app";
+   import { getFirestore } from "firebase/firestore";
    ```
 
 2. **Run Development Server**:
