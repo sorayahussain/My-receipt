@@ -148,20 +148,20 @@ export default function Scanner() {
     const pending = sessionStorage.getItem('pending_receipt');
     const pendingState = sessionStorage.getItem('pending_app_state');
     const pendingImage = sessionStorage.getItem('pending_image');
+    const pendingAttempt = sessionStorage.getItem('is_attempting_save');
     
     if (pending && auth.currentUser) {
       try {
         setReceiptData(JSON.parse(pending));
         if (pendingState) setState(pendingState as AppState);
         if (pendingImage) setImagePreview(pendingImage);
+        if (pendingAttempt === 'true') setIsAttemptingSave(true);
         
-        // Clean up
+        // Clean up session storage
         sessionStorage.removeItem('pending_receipt');
         sessionStorage.removeItem('pending_app_state');
         sessionStorage.removeItem('pending_image');
-        
-        // If we were in REVIEWING state, we can just let the user click save again
-        // or we can auto-save if we want. Let's let them click save to be safe.
+        sessionStorage.removeItem('is_attempting_save');
       } catch (e) {
         console.error("Failed to restore pending receipt", e);
       }
@@ -401,9 +401,19 @@ export default function Scanner() {
     if (!auth.currentUser) {
       setIsAttemptingSave(true);
       // Persist state to session storage in case they use redirect login
-      sessionStorage.setItem('pending_receipt', JSON.stringify(receiptData));
-      sessionStorage.setItem('pending_app_state', state);
-      if (imagePreview) sessionStorage.setItem('pending_image', imagePreview);
+      try {
+        sessionStorage.setItem('pending_receipt', JSON.stringify(receiptData));
+        sessionStorage.setItem('pending_app_state', state);
+        sessionStorage.setItem('is_attempting_save', 'true');
+        if (imagePreview) {
+          // Only store image if it's reasonably sized (session storage limit ~5MB)
+          if (imagePreview.length < 4 * 1024 * 1024) {
+            sessionStorage.setItem('pending_image', imagePreview);
+          }
+        }
+      } catch (e) {
+        console.warn("Session storage save failed (probably quota):", e);
+      }
       
       setShowAuthModal(true);
       return;
@@ -473,7 +483,10 @@ export default function Scanner() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  onClick={() => setShowAuthModal(false)}
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    setIsAttemptingSave(false);
+                  }}
                   className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
                 />
                 <motion.div 
@@ -683,6 +696,24 @@ export default function Scanner() {
 
               {/* Details Section */}
               <div className="bg-white rounded-3xl p-4 md:p-8 shadow-sm border border-gray-100 flex flex-col">
+                {!auth.currentUser && !isEditing && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-start gap-3"
+                  >
+                    <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                      <LogIn className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-blue-900 leading-tight">Guest Mode</p>
+                      <p className="text-xs text-blue-600 mt-1 leading-relaxed">
+                        Sign in to save this receipt to your permanent history and access spending analytics.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+                
                 <div className="flex justify-between items-center mb-6 md:mb-8">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 px-1">
                     {isEditing ? 'Edit Details' : 'Review Details'}
