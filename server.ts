@@ -17,16 +17,15 @@ async function startServer() {
     try {
       const { base64Data, mimeType } = req.body;
       
-      let apiKey = process.env.GEMINI_API_KEY;
-      let usingFallback = false;
+      const apiKey = process.env.GEMINI_API_KEY;
       
       if (!apiKey || apiKey.trim() === "" || apiKey.includes("YOUR_") || apiKey.includes("MY_GEMINI")) {
-        apiKey = "AIzaSyCETDDLRu_sfHmysYmkobj48JuSeld97kI";
-        usingFallback = true;
+        console.error("GEMINI_API_KEY is missing or invalid in the environment.");
+        return res.status(500).json({ error: "GEMINI_API_KEY is not configured. Please set it in the Settings menu." });
       }
       
       // Log masked key for debugging
-      console.log(`[AI] Using API Key: ${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)} (${usingFallback ? 'FALLBACK' : 'ENVIRONMENT'})`);
+      console.log(`[AI] Using API Key: ${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)}`);
 
       const genAI = new GoogleGenAI({ apiKey });
       
