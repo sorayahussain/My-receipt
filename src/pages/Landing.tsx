@@ -14,7 +14,7 @@ export default function Landing() {
           transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-6 md:mb-8">
-            <Zap className="w-3 h-3" /> Powered by Gemini 1.5 Flash
+            <Zap className="w-3 h-3" /> Powered by Gemini 3 Flash
           </div>
           <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-[1.1] px-2">
             Your Receipts in <br /><span className="text-blue-600">One Place. 💸</span>
