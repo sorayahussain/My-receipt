@@ -6,7 +6,7 @@
 
 MyReceipt is an intelligent, privacy-first receipt scanning and expense tracking application. It demonstrates the practical application of Multimodal LLMs (Gemini) in automating tedious financial data entry while maintaining rigorous data security and user ownership.
 
-<img src="assets/landingpage.png" alt="Landing Page" width="600"/>
+<img src="assets/landingpage.png" alt="Landing Page"/>
 
 
 ---
