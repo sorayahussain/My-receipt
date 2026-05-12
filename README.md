@@ -7,7 +7,7 @@ Smart receipt scanner that extracts merchant, date, and total amount using Googl
 ## ✨ Core Features
 
 ### 🧠 Explainable AI (XAI)
-Powered by **Gemini 1.5 Flash**, our scanning engine does more than just OCR. It understands the context of a receipt—distinguishing between tax, subtotal, and the final amount even on crumpled or blurry images. It identifies the merchant category and currency automatically, providing a structured summary that explains your spending.
+Powered by **Gemini 3 Flash**, our scanning engine does more than just OCR. It understands the context of a receipt—distinguishing between tax, subtotal, and the final amount even on crumpled or blurry images. It identifies the merchant category and currency automatically, providing a structured summary that explains your spending.
 
 ### 🔐 Multi-Layered Security
 - **Firebase Authentication**: Secure Google-only login ensures your data is tied strictly to your identity.
