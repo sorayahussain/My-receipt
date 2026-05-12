@@ -1,11 +1,7 @@
 import express from "express";
 import path from "path";
-import { fileURLToPath } from "url";
-import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import "dotenv/config";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
@@ -22,23 +18,21 @@ async function startServer() {
       const { base64Data, mimeType } = req.body;
       
       let apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey || apiKey === "" || apiKey.includes("YOUR_")) {
-        apiKey = "AIzaSyAHO5aHilzn6hRd3T7OK4EYZzJjrh4P8Qc";
+      let usingFallback = false;
+      
+      if (!apiKey || apiKey.trim() === "" || apiKey.includes("YOUR_") || apiKey.includes("MY_GEMINI")) {
+        apiKey = "AIzaSyCETDDLRu_sfHmysYmkobj48JuSeld97kI";
+        usingFallback = true;
       }
       
-      if (!apiKey || apiKey.includes("YOUR_")) {
-        console.error("GEMINI_API_KEY is missing or invalid.");
-        return res.status(500).json({ error: "GEMINI_API_KEY is not configured on the server." });
-      }
-
       // Log masked key for debugging
-      console.log(`Using Gemini API Key: ${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)}`);
+      console.log(`[AI] Using API Key: ${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)} (${usingFallback ? 'FALLBACK' : 'ENVIRONMENT'})`);
 
       const genAI = new GoogleGenAI({ apiKey });
       
-      console.log("Processing extraction with Gemini (gemini-1.5-flash)...");
+      console.log("Processing extraction with Gemini (gemini-3-flash-preview)...");
       const response = await genAI.models.generateContent({
-        model: "gemini-1.5-flash", 
+        model: "gemini-3-flash-preview", 
         contents: [
           {
             inlineData: {
@@ -49,7 +43,6 @@ async function startServer() {
           { text: "Extract data from this receipt." }
         ],
         config: {
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           systemInstruction: "You are a professional receipt scanner. Extract: merchant name, category, date (YYYY-MM-DD), currency (ISO 4217), total amount, and line items. Use clues like symbols or addresses to resolve currency ambiguity. If unusable, return an error field.",
           responseMimeType: "application/json",
           responseSchema: {

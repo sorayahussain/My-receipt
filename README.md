@@ -5,7 +5,7 @@ Smart receipt scanner that extracts merchant, date, and total amount using Googl
 ## ✨ Core Features
 
 ### 🧠 Explainable AI (XAI)
-Powered by **Gemini 1.5 Flash**, our scanning engine does more than just OCR. It understands the context of a receipt—distinguishing between tax, subtotal, and the final amount even on crumpled or blurry images. It identifies the merchant category and currency automatically, providing a structured summary that explains your spending.
+Powered by **Gemini 3 Flash**, our scanning engine does more than just OCR. It understands the context of a receipt—distinguishing between tax, subtotal, and the final amount even on crumpled or blurry images. It identifies the merchant category and currency automatically, providing a structured summary that explains your spending.
 
 ### 🔐 Multi-Layered Security
 - **Firebase Authentication**: Secure Google-only login ensures your data is tied strictly to your identity.
@@ -59,7 +59,7 @@ To deploy this application to Vercel:
 1. Push your code to a GitHub repository.
 2. Connect the repository to Vercel.
 3. **CRITICAL**: Add the following Environment Variables in your Vercel Project Settings:
-   - `GEMINI_API_KEY`: `AIzaSyAHO5aHilzn6hRd3T7OK4EYZzJjrh4P8Qc` (Google AI API Key)
+   - `GEMINI_API_KEY`: `AIzaSyCETDDLRu_sfHmysYmkobj48JuSeld97kI` (Google AI API Key)
    - `VITE_FIREBASE_API_KEY`: `AIzaSyD1mZOqkB8vhh_Mat_xz8CJ3tByA1nExB4`
    - `VITE_FIREBASE_AUTH_DOMAIN`: `gen-lang-client-0628889583.firebaseapp.com`
    - `VITE_FIREBASE_PROJECT_ID`: `gen-lang-client-0628889583`

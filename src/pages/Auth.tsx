@@ -60,7 +60,11 @@ export default function Auth() {
       navigate('/scanner');
     } catch (error: any) {
       console.error("Login failed:", error);
-      setError("Google login failed. Please try again.");
+      if (error.code === 'auth/unauthorized-domain') {
+        setError(`Unauthorized Domain: ${window.location.hostname} needs to be added to Authorized Domains in Firebase Console.`);
+      } else {
+        setError("Google login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
