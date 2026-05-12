@@ -1,15 +1,14 @@
 # MyReceipt 🧾
-Smart receipt scanner that extracts merchant, date, and total amount using Gemini 1.5 Flash. MyReceipt is built for speed, security, and absolute user data ownership.
 
-<img src="assets/landingpage.png" alt="Landing Page width=150"/>
+Smart receipt scanner that extracts merchant, date, and total amount using Google's AI. MyReceipt is built for speed, security, and absolute user data ownership.
 
 ## ✨ Core Features
 
 ### 🧠 Explainable AI (XAI)
-Powered by **Gemini 1.5 Flash**, the scanning engine does more than just Optical Character Recognition (OCR). It understands the context of a receipt—distinguishing between tax, subtotal, and the final amount even on crumpled or blurry images. It identifies the merchant category and currency automatically, providing a structured summary that explains your spending.
+Powered by **Gemini 1.5 Flash**, our scanning engine does more than just OCR. It understands the context of a receipt—distinguishing between tax, subtotal, and the final amount even on crumpled or blurry images. It identifies the merchant category and currency automatically, providing a structured summary that explains your spending.
 
 ### 🔐 Multi-Layered Security
-- **Firebase Authentication**: Secure Google login ensures your data is tied strictly to your identity. Additionally uses firebase for email/password login
+- **Firebase Authentication**: Secure Google-only login ensures your data is tied strictly to your identity.
 - **Eight-Pillar Firestore Rules**: Our database is protected by absolute Zero-Trust security rules, preventing update-gaps, ID poisoning, and unauthorized access.
 - **Relational Integrity**: Access to sub-resources is strictly derived from the parent document's ownership.
 
@@ -19,7 +18,7 @@ Powered by **Gemini 1.5 Flash**, the scanning engine does more than just Optical
 - **PDF Export**: Generate branded, professional spending reports (Summary or Detailed) with visualization charts included.
 
 ### 👤 Data Ownership & Privacy
-- **Total Control**: Edit any scanned field or category if the AI capture needs adjustment. Clear History anytime.
+- **Total Control**: Edit any scanned field or category if the AI capture needs adjustment.
 - **Export Anything**: Your data is yours; export your history to PDF at any time.
 - **Account Deletion**: Request permanent account deletion with safe re-authentication (using Google Auth) to ensure only you can trigger a wipe of your data and authorization.
 

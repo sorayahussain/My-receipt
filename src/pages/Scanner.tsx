@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { 
   Upload, 
   Receipt, 
@@ -181,20 +181,20 @@ export default function Scanner() {
     try {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                data: base64Data,
-                mimeType: mimeType,
-              },
+        contents: [
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType,
             },
-            {
-              text: "Extract information from this receipt image. Focus on merchant name, category, items, and currency. \n\nIMPORTANT: If the image is too blurry, dark, or not a receipt, return an empty object or a JSON with an 'error' field describing the issue.\n\nCURRENCY & TOTAL EXTRACTION (CRITICAL):\n1. AMBIGUITY HANDLING: If a currency symbol (like '$') is used by multiple countries (USD, CAD, AUD), you MUST analyze nearby text, addresses, or merchant names to resolve the ambiguity. \n2. EXPLICIT SYMBOLS: Prioritize explicit symbols (€, £, ¥, ₹, ₩, etc.) or ISO codes (EUR, GBP, JPY) over generic symbols.\n3. CONFLICTING DATA: If you find conflicting evidence (e.g., a merchant in London but prices in Euro), you must note this in 'extractionReasoning'.\n4. CONFIDENCE: Set 'currencyConfidence' based on how certain you are (1.0 for certain, <0.7 for ambiguous cases).\n\nDETAILED REASONING:\nIn the 'extractionReasoning' field, provide a detailed explanation for your currency and total amount choices. Mention the specific clues (symbols, ISO codes, merchant location indicators) that led to your decision, especially if there was any uncertainty.\n\nCATEGORIZATION:\nClassify into: Dining, Groceries, Travel, Tech, Entertainment, or Other.\n\nLINE ITEMS:\nExtract each item name, quantity, and unit price. Sum of items should match totalAmount.",
-            },
-          ],
-        },
+          },
+          {
+            text: "Extract data from this receipt.",
+          },
+        ],
         config: {
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          systemInstruction: "You are a professional receipt scanner. Extract: merchant name, category, date (YYYY-MM-DD), currency (ISO 4217), total amount, and line items. Use clues like symbols or addresses to resolve currency ambiguity. If unusable, return an error field.",
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
