@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
-import { createServer as createViteServer } from "vite";
+import "dotenv/config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,20 +14,31 @@ async function startServer() {
   app.use(express.json({ limit: '10mb' }));
 
   // Initialize Gemini AI (Server-side)
-  // Use lazy init inside routes if needed, but here we can check the key
-  const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-
+  // We'll read the key inside the route to ensure we get the latest environment variable
+  
   // API Routes
   app.post("/api/extract", async (req, res) => {
     try {
       const { base64Data, mimeType } = req.body;
       
-      if (!process.env.GEMINI_API_KEY) {
+      let apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey || apiKey === "" || apiKey.includes("YOUR_")) {
+        apiKey = "AIzaSyAHO5aHilzn6hRd3T7OK4EYZzJjrh4P8Qc";
+      }
+      
+      if (!apiKey || apiKey.includes("YOUR_")) {
+        console.error("GEMINI_API_KEY is missing or invalid.");
         return res.status(500).json({ error: "GEMINI_API_KEY is not configured on the server." });
       }
 
+      // Log masked key for debugging
+      console.log(`Using Gemini API Key: ${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)}`);
+
+      const genAI = new GoogleGenAI({ apiKey });
+      
+      console.log("Processing extraction with Gemini (gemini-1.5-flash)...");
       const response = await genAI.models.generateContent({
-        model: "gemini-2.0-flash", // Use a stable and fast model
+        model: "gemini-1.5-flash", 
         contents: [
           {
             inlineData: {
@@ -75,7 +86,12 @@ async function startServer() {
         }
       });
 
-      res.json(JSON.parse(response.text));
+      if (!response.text) {
+        throw new Error("No text returned from Gemini");
+      }
+
+      const text = response.text.trim();
+      res.json(JSON.parse(text));
     } catch (error: any) {
       console.error("Server AI Error:", error);
       res.status(500).json({ error: error.message || "Failed to extract data" });
@@ -84,6 +100,7 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

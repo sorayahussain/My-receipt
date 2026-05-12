@@ -59,14 +59,15 @@ To deploy this application to Vercel:
 1. Push your code to a GitHub repository.
 2. Connect the repository to Vercel.
 3. **CRITICAL**: Add the following Environment Variables in your Vercel Project Settings:
-   - `GEMINI_API_KEY`: Your Google AI API Key (Server-side extraction).
-   - `VITE_FIREBASE_API_KEY`: Your Firebase Web API Key.
-   - `VITE_FIREBASE_AUTH_DOMAIN`: Your Project's auth domain.
+   - `GEMINI_API_KEY`: `AIzaSyAHO5aHilzn6hRd3T7OK4EYZzJjrh4P8Qc` (Google AI API Key)
+   - `VITE_FIREBASE_API_KEY`: `AIzaSyD1mZOqkB8vhh_Mat_xz8CJ3tByA1nExB4`
+   - `VITE_FIREBASE_AUTH_DOMAIN`: `gen-lang-client-0628889583.firebaseapp.com`
    - `VITE_FIREBASE_PROJECT_ID`: `gen-lang-client-0628889583`
-   - `VITE_FIREBASE_STORAGE_BUCKET`: Your Project's storage bucket.
-   - `VITE_FIREBASE_MESSAGING_SENDER_ID`: Your Project's sender ID.
-   - `VITE_FIREBASE_APP_ID`: Your Project's App ID.
-   - `VITE_FIREBASE_DATABASE_ID`: `(default)` (unless you created a named database).
+   - `VITE_FIREBASE_STORAGE_BUCKET`: `gen-lang-client-0628889583.firebasestorage.app`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`: `141638499711`
+   - `VITE_FIREBASE_APP_ID`: `1:141638499711:web:1058e08783f26cb214ee4a`
+   - `VITE_FIREBASE_DATABASE_ID`: `ai-studio-244b6cde-c019-4e43-9abc-018e262dbc1e`
+   - `APP_URL`: Your Vercel deployment URL (e.g., `https://your-app.vercel.app`)
 
 ```bash
 npm run build
