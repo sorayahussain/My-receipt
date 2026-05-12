@@ -1,6 +1,6 @@
 # MyReceipt 🧾
-
 Smart receipt scanner that extracts merchant, date, and total amount using Gemini 1.5 Flash. MyReceipt is built for speed, security, and absolute user data ownership.
+<img src="assets/landingpage.png" alt="Landing Page"/>
 
 ## ✨ Core Features
 
