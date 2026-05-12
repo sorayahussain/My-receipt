@@ -73,6 +73,58 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 
 import { handleFirestoreError, OperationType } from '../lib/firebase-utils';
 
+interface LoadingScreenProps {
+  state: AppState;
+}
+
+const LoadingScreen = React.memo(({ state }: LoadingScreenProps) => (
+  <motion.div 
+    key="processing"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100"
+  >
+    <div className="relative mb-8">
+      <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-25" />
+      <div className="relative w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+      </div>
+    </div>
+    <h2 className="text-2xl font-bold mb-2">
+      {state === AppState.UPLOADING ? 'Storing Data... 💾' : 'AI is reading... 🧠'}
+    </h2>
+    <p className="text-gray-500 max-w-sm text-center">
+      Extracted data will be ready in just a few seconds. We're identifying the merchant, date, and totals. ✨
+    </p>
+  </motion.div>
+));
+
+interface ReceiptImageProps {
+  imagePreview: string | null;
+  status?: string;
+}
+
+const ReceiptImage = React.memo(({ imagePreview, status }: ReceiptImageProps) => (
+  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 h-fit">
+    <div className="flex justify-between items-center mb-4">
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Captured Receipt</h3>
+      {status && (
+        <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold uppercase bg-emerald-50 px-2 py-1 rounded">
+          <CheckCircle2 className="w-3 h-3" /> {status}
+        </div>
+      )}
+    </div>
+    <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100">
+      <img 
+        src={imagePreview || ''} 
+        alt="Receipt" 
+        className="w-full h-full object-contain"
+      />
+    </div>
+  </div>
+));
+
 export default function Scanner() {
   const [state, setState] = useState<AppState>(AppState.IDLE);
   const [isEditing, setIsEditing] = useState(false);
@@ -282,42 +334,48 @@ export default function Scanner() {
     }
   };
 
+  // Memoized total amount calculation to avoid useEffect overhead
+  const calculateTotal = (items: LineItem[]) => {
+    return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  };
+
   const handleUpdateField = (field: keyof ReceiptData, value: string | number) => {
     setReceiptData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleAddLineItem = () => {
-    setReceiptData(prev => ({
-      ...prev,
-      lineItems: [...(prev.lineItems || []), { name: '', quantity: 1, price: 0 }]
-    }));
+    setReceiptData(prev => {
+      const newLineItems = [...(prev.lineItems || []), { name: '', quantity: 1, price: 0 }];
+      return { 
+        ...prev, 
+        lineItems: newLineItems,
+        totalAmount: calculateTotal(newLineItems)
+      };
+    });
   };
 
   const handleRemoveLineItem = (index: number) => {
-    setReceiptData(prev => ({
-      ...prev,
-      lineItems: prev.lineItems.filter((_, i) => i !== index)
-    }));
+    setReceiptData(prev => {
+      const newLineItems = prev.lineItems.filter((_, i) => i !== index);
+      return { 
+        ...prev, 
+        lineItems: newLineItems,
+        totalAmount: calculateTotal(newLineItems)
+      };
+    });
   };
 
   const handleUpdateLineItem = (index: number, field: keyof LineItem, value: string | number) => {
     setReceiptData(prev => {
       const newLineItems = [...prev.lineItems];
       newLineItems[index] = { ...newLineItems[index], [field]: value };
-      return { ...prev, lineItems: newLineItems };
+      return { 
+        ...prev, 
+        lineItems: newLineItems,
+        totalAmount: calculateTotal(newLineItems)
+      };
     });
   };
-
-  // Automatically update total amount when line items change
-  useEffect(() => {
-    if (isEditing) {
-      const newTotal = receiptData.lineItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-      // Only update if the difference is more than a rounding error to avoid infinite loops
-      if (Math.abs(newTotal - receiptData.totalAmount) > 0.001) {
-        setReceiptData(prev => ({ ...prev, totalAmount: newTotal }));
-      }
-    }
-  }, [receiptData.lineItems, isEditing]);
 
   // Listen for login if user was attempting a guest save
   useEffect(() => {
@@ -610,26 +668,7 @@ export default function Scanner() {
 
           {/* PROCESSING STATE */}
           {(state === AppState.UPLOADING || state === AppState.EXTRACTING) && (
-            <motion.div 
-              key="processing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100"
-            >
-              <div className="relative mb-8">
-                <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-25" />
-                <div className="relative w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
-                  <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold mb-2">
-                {state === AppState.UPLOADING ? 'Storing Data... 💾' : 'AI is reading... 🧠'}
-              </h2>
-              <p className="text-gray-500 max-w-sm text-center">
-                Extracted data will be ready in just a few seconds. We're identifying the merchant, date, and totals. ✨
-              </p>
-            </motion.div>
+            <LoadingScreen state={state} />
           )}
 
           {/* REVIEW STATE */}
@@ -641,21 +680,7 @@ export default function Scanner() {
               className="grid grid-cols-1 lg:grid-cols-2 gap-8"
             >
               {/* Preview Card */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 h-fit">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Captured Receipt</h3>
-                  <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold uppercase bg-emerald-50 px-2 py-1 rounded">
-                    <CheckCircle2 className="w-3 h-3" /> Scanned
-                  </div>
-                </div>
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100">
-                  <img 
-                    src={imagePreview || ''} 
-                    alt="Receipt" 
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </div>
+              <ReceiptImage imagePreview={imagePreview} status="Scanned" />
 
               {/* Details Section */}
               <div className="bg-white rounded-3xl p-4 md:p-8 shadow-sm border border-gray-100 flex flex-col">
