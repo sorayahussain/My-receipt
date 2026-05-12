@@ -187,7 +187,7 @@ export default function Scanner() {
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const modelName = "gemini-3-flash-preview"; 
+      const modelName = "gemini-1.5-flash-preview"; 
       
       console.log(`[AI] Extracting directly from frontend with ${modelName}`);
       
