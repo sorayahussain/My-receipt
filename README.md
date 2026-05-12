@@ -54,15 +54,27 @@ Powered by **Gemini 1.5 Flash**, our scanning engine does more than just OCR. It
 
 ### ☁️ Deployment
 
-#### 1. Web Hosting (NPM Build)
-To prepare the application for production hosting (Vercel, Netlify, or Cloud Run):
+#### 1. Web Hosting (VERCEL / Production)
+To deploy this application to Vercel:
+1. Push your code to a GitHub repository.
+2. Connect the repository to Vercel.
+3. **CRITICAL**: Add the following Environment Variables in your Vercel Project Settings:
+   - `GEMINI_API_KEY`: Your Google AI API Key (Server-side extraction).
+   - `VITE_FIREBASE_API_KEY`: Your Firebase Web API Key.
+   - `VITE_FIREBASE_AUTH_DOMAIN`: Your Project's auth domain.
+   - `VITE_FIREBASE_PROJECT_ID`: `gen-lang-client-0628889583`
+   - `VITE_FIREBASE_STORAGE_BUCKET`: Your Project's storage bucket.
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`: Your Project's sender ID.
+   - `VITE_FIREBASE_APP_ID`: Your Project's App ID.
+   - `VITE_FIREBASE_DATABASE_ID`: `(default)` (unless you created a named database).
+
 ```bash
 npm run build
 ```
 This generates a highly optimized `dist` folder ready for static serving.
 
 #### 2. Firebase Security (Rules)
-Ensure your data remains private by deploying the security specification:
+Ensure your data remains private by deploying the security specification to your project in the **asia-east1** region:
 ```bash
 # Requires Firebase CLI
 firebase deploy --only firestore:rules
@@ -70,4 +82,4 @@ firebase deploy --only firestore:rules
 *Note: Our `firestore.rules` file contains the logic for the Eight-Pillar security architecture.*
 
 #### 3. AI Configuration
-Ensure your deployment environment has the `GEMINI_API_KEY` configured to allow the @google/genai SDK to authenticate.
+Ensure your deployment environment has the `GEMINI_API_KEY` configured to allow the @google/genai SDK (running in `server.ts`) to authenticate.

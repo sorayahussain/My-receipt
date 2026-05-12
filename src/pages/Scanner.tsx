@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+// Removed Gemini imports as it's now handled server-side
 import { 
   Upload, 
   Receipt, 
@@ -119,8 +119,8 @@ export default function Scanner() {
     }
   }, [auth.currentUser]);
 
-  // Initialize Gemini AI
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  // Gemini AI is now handled via the server-side proxy
+  // const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
   const resetApp = () => {
     setState(AppState.IDLE);
@@ -179,88 +179,18 @@ export default function Scanner() {
   const extractDataWithAI = async (base64Data: string, mimeType: string) => {
     setState(AppState.EXTRACTING);
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: mimeType,
-            },
-          },
-          {
-            text: "Extract data from this receipt.",
-          },
-        ],
-        config: {
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-          systemInstruction: "You are a professional receipt scanner. Extract: merchant name, category, date (YYYY-MM-DD), currency (ISO 4217), total amount, and line items. Use clues like symbols or addresses to resolve currency ambiguity. If unusable, return an error field.",
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              error: {
-                type: Type.STRING,
-                description: "If the image is unusable, provide a reason (e.g., 'BLURRY', 'NOT_A_RECEIPT', 'UNREADABLE'). Otherwise, leave empty.",
-              },
-              merchantName: {
-                type: Type.STRING,
-                description: "The name of the store, restaurant, or service provider.",
-              },
-              category: {
-                type: Type.STRING,
-                description: "One of: Dining, Groceries, Travel, Tech, Entertainment, Other.",
-              },
-              summary: {
-                type: Type.STRING,
-                description: "A very brief one-sentence summary of the purchase (e.g. 'Coffee and a croissant').",
-              },
-              merchantAddress: {
-                type: Type.STRING,
-                description: "The physical address of the merchant if available.",
-              },
-              date: {
-                type: Type.STRING,
-                description: "The date of the transaction in YYYY-MM-DD format.",
-              },
-              totalAmount: {
-                type: Type.NUMBER,
-                description: "The final total amount charged.",
-              },
-              currency: {
-                type: Type.STRING,
-                description: "The 3-letter ISO 4217 currency code.",
-              },
-              currencyConfidence: {
-                type: Type.NUMBER,
-                description: "Confidence score (0.0 to 1.0) for currency extraction.",
-              },
-              extractionReasoning: {
-                type: Type.STRING,
-                description: "Detailed explanation of visual clues and logic used to determine currency and total amount, especially when ambiguous.",
-              },
-              lineItems: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    quantity: { type: Type.NUMBER },
-                    price: { type: Type.NUMBER }
-                  },
-                  required: ["name", "quantity", "price"]
-                }
-              }
-            },
-            required: ["merchantName", "category", "summary", "date", "totalAmount", "currency", "currencyConfidence", "extractionReasoning", "lineItems"],
-          },
-        },
+      const response = await fetch('/api/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Data, mimeType })
       });
 
-      const text = response.text;
-      if (!text) throw new Error("NO_RESPONSE");
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to connect to extraction service');
+      }
 
-      const parsedData = JSON.parse(text);
+      const parsedData = await response.json();
       
       if (parsedData.error) {
         throw new Error(parsedData.error);
@@ -282,9 +212,11 @@ export default function Scanner() {
       } else if (error.message === "UNREADABLE") {
         message = "The text is too hard to read. Make sure the receipt is flat and well-lit.";
       } else if (error.message === "NO_RESPONSE") {
-        message = "Gemini didn't return any data. This might be a temporary connection issue.";
+        message = "The server didn't return any data. This might be a temporary connection issue.";
       } else if (error.name === "SyntaxError") {
         message = "There was a problem processing the receipt data. Please try another photo.";
+      } else if (error.message.includes('GEMINI_API_KEY')) {
+        message = "Server Configuration Error: The AI service is not correctly set up. Please contact the administrator.";
       }
       
       setErrorMessage(message);
