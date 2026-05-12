@@ -1,49 +1,73 @@
 # MyReceipt 🧾
 
-Smart receipt scanner that extracts merchant, date, and total amount using Google's AI.
+Smart receipt scanner that extracts merchant, date, and total amount using Google's AI. MyReceipt is built for speed, security, and absolute user data ownership.
 
-## 🚀 How to Run
+## ✨ Core Features
 
-Follow these steps to get the application running locally:
+### 🧠 Explainable AI (XAI)
+Powered by **Gemini 1.5 Flash**, our scanning engine does more than just OCR. It understands the context of a receipt—distinguishing between tax, subtotal, and the final amount even on crumpled or blurry images. It identifies the merchant category and currency automatically, providing a structured summary that explains your spending.
 
+### 🔐 Multi-Layered Security
+- **Firebase Authentication**: Secure Google-only login ensures your data is tied strictly to your identity.
+- **Eight-Pillar Firestore Rules**: Our database is protected by absolute Zero-Trust security rules, preventing update-gaps, ID poisoning, and unauthorized access.
+- **Relational Integrity**: Access to sub-resources is strictly derived from the parent document's ownership.
+
+### 📊 History & Analytics
+- **Live History**: Instant access to all past scans with category-based filtering.
+- **Spending Summary**: Real-time spending charts (Pie Charts) and total expense tracking.
+- **PDF Export**: Generate branded, professional spending reports (Summary or Detailed) with visualization charts included.
+
+### 👤 Data Ownership & Privacy
+- **Total Control**: Edit any scanned field or category if the AI capture needs adjustment.
+- **Export Anything**: Your data is yours; export your history to PDF at any time.
+- **Account Deletion**: Request permanent account deletion with safe re-authentication (using Google Auth) to ensure only you can trigger a wipe of your data and authorization.
+
+## 🛠️ Tech Stack & Dependencies
+
+### Frontend
+- **React 19 & Vite**: Ultra-fast modern rendering.
+- **Tailwind CSS 4.0**: Utility-first styling with high-density mobile optimization.
+- **Framer Motion (Motion/React)**: Fluid, purposeful UI transitions.
+- **Lucide React**: Clean, consistent iconography.
+
+### Services
+- **Google Gemini SDK (`@google/genai`)**: The intelligence layer for vision and data extraction.
+- **Firebase (`firebase`)**: Real-time NoSQL database (Firestore) and secure Identity Management.
+- **jsPDF & jsPDF-AutoTable**: Client-side PDF generation for reports.
+
+## 🚀 How to Run & Deploy
+
+### 🏠 Local Development
 1. **Install Dependencies**:
    ```bash
    npm install
-   npm install firebase@12.13.0 --save
-   import { initializeApp } from "firebase/app";
-   import { getFirestore } from "firebase/firestore";
    ```
 
-2. **Run Development Server**:
+2. **Setup Environment**:
+   Create a `.env` file with your `GEMINI_API_KEY`.
+
+3. **Run Dev Server**:
    ```bash
    npm run dev
    ```
-   The app will be available at `http://localhost:3000`.
+   The app will start at `http://localhost:3000`.
 
-3. **Build for Production**:
-   ```bash
-   npm run build
-   ```
+### ☁️ Deployment
 
-## 🧠 AI Model Used
+#### 1. Web Hosting (NPM Build)
+To prepare the application for production hosting (Vercel, Netlify, or Cloud Run):
+```bash
+npm run build
+```
+This generates a highly optimized `dist` folder ready for static serving.
 
-This application is powered by **Gemini 1.5 Flash**.
+#### 2. Firebase Security (Rules)
+Ensure your data remains private by deploying the security specification:
+```bash
+# Requires Firebase CLI
+firebase deploy --only firestore:rules
+```
+*Note: Our `firestore.rules` file contains the logic for the Eight-Pillar security architecture.*
 
-We use the `@google/genai` SDK to process receipt images and extract structured data (Merchant name, Date, Currency, Total Amount, and Category) with high speed and accuracy.
-
-## ✨ Features
-
-- **AI Scanning**: Instant extraction of receipt data using computer vision.
-- **Secure Storage**: All receipts are saved to your personal Firebase account.
-- **History Management**: Browse, filter by category, and manage your past expenses.
-- **PDF Export**: Generate professional reports of your spending.
-- **Privacy First**: Easy tools to clear your history or delete your account permanently.
-
-## 🛠️ Tech Stack
-
-- **Frontend**: React 19, Vite, Tailwind CSS
-- **Backend/DB**: Firebase (Firestore & Auth)
-- **AI**: Gemini 1.5 Flash
-- **Animations**: Framer Motion (Motion)
-- **Icons**: Lucide React
-- **PDF Generation**: jsPDF
+#### 3. AI Configuration
+Ensure your deployment environment has the `GEMINI_API_KEY` configured to allow the @google/genai SDK to authenticate.
