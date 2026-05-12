@@ -171,7 +171,8 @@ export default function History() {
   const filteredReceipts = receipts.filter(receipt => {
     const matchesSearch = receipt.merchantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          receipt.summary?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || receipt.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'All' || 
+                         (receipt.category && receipt.category.toLowerCase() === selectedCategory.toLowerCase());
     return matchesSearch && matchesCategory;
   });
 
@@ -474,7 +475,7 @@ export default function History() {
                     >
                       {/* Category Badge */}
                       <div className={`absolute top-6 right-6 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-tighter ${
-                        CATEGORIES.find(c => c.id === receipt.category)?.color || 'bg-gray-100 text-gray-600'
+                        CATEGORIES.find(c => c.id.toLowerCase() === (receipt.category || '').toLowerCase())?.color || 'bg-gray-100 text-gray-600'
                       }`}>
                         {receipt.category}
                       </div>
@@ -483,7 +484,7 @@ export default function History() {
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
                           selectedReceiptId === receipt.id ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500'
                         }`}>
-                          {CATEGORIES.find(c => c.id === receipt.category)?.icon || <ReceiptIcon />}
+                          {CATEGORIES.find(c => c.id.toLowerCase() === (receipt.category || '').toLowerCase())?.icon || <ReceiptIcon />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-black text-gray-900 truncate pr-16">{receipt.merchantName}</h3>

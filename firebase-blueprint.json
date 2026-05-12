@@ -18,14 +18,26 @@
       "type": "object",
       "properties": {
         "merchantName": { "type": "string" },
+        "category": { "type": "string", "enum": ["Dining", "Groceries", "Travel", "Tech", "Entertainment", "Other"] },
+        "summary": { "type": "string" },
         "date": { "type": "string" },
         "totalAmount": { "type": "number" },
         "currency": { "type": "string" },
         "ownerId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
-        "imageUrl": { "type": "string" }
+        "lineItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" }
+            }
+          }
+        }
       },
-      "required": ["merchantName", "date", "totalAmount", "currency", "ownerId", "createdAt"]
+      "required": ["merchantName", "category", "date", "totalAmount", "currency", "ownerId", "createdAt"]
     }
   },
   "firestore": {

@@ -130,10 +130,13 @@ export default function Scanner() {
   const [isAttemptingSave, setIsAttemptingSave] = useState(false);
   const [receiptData, setReceiptData] = useState<ReceiptData>({
     merchantName: '',
+    category: 'Other',
+    summary: '',
     date: '',
     totalAmount: 0,
     currency: 'USD',
-    currencyConfidence: 1
+    currencyConfidence: 1,
+    lineItems: []
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -250,7 +253,7 @@ export default function Scanner() {
           ]
         },
         config: {
-          systemInstruction: "You are a professional receipt scanner. Extract: merchant name, category, date (YYYY-MM-DD), currency (ISO 4217), total amount, and line items. Use clues like symbols or addresses to resolve currency ambiguity. If unusable, return an error field.",
+          systemInstruction: "You are a professional receipt scanner. Extract: merchant name, category (must be one of: Dining, Groceries, Travel, Tech, Entertainment, Other), date (YYYY-MM-DD), currency (ISO 4217), total amount, and line items. Use clues like symbols or addresses to resolve currency ambiguity. If unusable, return an error field.",
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -260,7 +263,10 @@ export default function Scanner() {
                 description: "If unusable, provide a reason. Otherwise, leave empty.",
               },
               merchantName: { type: Type.STRING },
-              category: { type: Type.STRING },
+              category: { 
+                type: Type.STRING,
+                enum: ['Dining', 'Groceries', 'Travel', 'Tech', 'Entertainment', 'Other']
+              },
               summary: { type: Type.STRING },
               merchantAddress: { type: Type.STRING },
               date: { type: Type.STRING },
