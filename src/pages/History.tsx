@@ -26,11 +26,14 @@ import {
   X,
   Loader2,
   FileText,
-  LayoutList
+  LayoutList,
+  PieChart,
+  ArrowUpRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError, OperationType } from '../lib/firebase-utils';
 import { generateHistoryPDF } from '../lib/pdf-utils';
+import { ALL_CATEGORIES, CURRENCY_SYMBOLS, CATEGORIES } from '../constants';
 
 interface LineItem {
   name: string;
@@ -50,27 +53,9 @@ interface Receipt {
   lineItems?: LineItem[];
 }
 
-const CATEGORIES = [
-  { id: 'All', icon: <ReceiptIcon className="w-4 h-4" />, color: 'bg-gray-100 text-gray-600' },
-  { id: 'Dining', icon: <Utensils className="w-4 h-4" />, color: 'bg-orange-100 text-orange-600' },
-  { id: 'Groceries', icon: <ShoppingBag className="w-4 h-4" />, color: 'bg-emerald-100 text-emerald-600' },
-  { id: 'Travel', icon: <Bus className="w-4 h-4" />, color: 'bg-blue-100 text-blue-600' },
-  { id: 'Tech', icon: <Zap className="w-4 h-4" />, color: 'bg-purple-100 text-purple-600' },
-  { id: 'Entertainment', icon: <Gamepad2 className="w-4 h-4" />, color: 'bg-pink-100 text-pink-600' },
-  { id: 'Other', icon: <MoreHorizontal className="w-4 h-4" />, color: 'bg-slate-100 text-slate-600' },
-];
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  CAD: 'C$',
-  AUD: 'A$',
-  INR: '₹',
-  CNY: '¥',
-  CHF: 'Fr'
-};
+const CATEGORIES_LOCAL = CATEGORIES;
+const ALL_CATEGORIES_LOCAL = ALL_CATEGORIES;
+const CURRENCY_SYMBOLS_LOCAL = CURRENCY_SYMBOLS;
 
 export default function History() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -81,6 +66,7 @@ export default function History() {
   const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [categoryStats, setCategoryStats] = useState<Record<string, number>>({});
   const [exportOptions, setExportOptions] = useState({
     startDate: '',
     endDate: '',
@@ -164,6 +150,14 @@ export default function History() {
       setReceipts(fetchedReceipts);
       setLoading(false);
       
+      // Calculate total breakdown
+      const stats: Record<string, number> = {};
+      fetchedReceipts.forEach(r => {
+        const cat = r.category || 'Other';
+        stats[cat] = (stats[cat] || 0) + (r.totalAmount || 0);
+      });
+      setCategoryStats(stats);
+      
       // Calculate total (simplified to USD for summary if multiple currencies exist)
       const total = fetchedReceipts.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
       setTotalSpent(total);
@@ -180,6 +174,23 @@ export default function History() {
     const matchesCategory = selectedCategory === 'All' || receipt.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const groupedReceipts = React.useMemo(() => {
+    const groups: Record<string, Receipt[]> = {};
+    filteredReceipts.forEach(r => {
+      // Handle potential invalid date
+      try {
+        const date = new Date(r.date);
+        const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        if (!groups[month]) groups[month] = [];
+        groups[month].push(r);
+      } catch (e) {
+        if (!groups['Other']) groups['Other'] = [];
+        groups['Other'].push(r);
+      }
+    });
+    return groups;
+  }, [filteredReceipts]);
 
   if (loading) {
     return (
@@ -361,6 +372,47 @@ export default function History() {
         </div>
       </div>
 
+      {/* Category Spending Breakdown */}
+      <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 mb-6">
+          <PieChart className="w-5 h-5 text-blue-600" />
+          <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">Spending by Category</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {CATEGORIES.map(cat => {
+            const amount = categoryStats[cat.id] || 0;
+            const percentage = totalSpent > 0 ? (amount / totalSpent) * 100 : 0;
+            
+            return (
+              <div key={cat.id} className={`p-4 rounded-3xl border border-transparent transition-all hover:bg-gray-50/50 ${amount > 0 ? 'bg-gray-50/30' : 'opacity-40 grayscale animate-pulse-slow'}`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${cat.color}`}>
+                    {cat.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter truncate">{cat.id}</p>
+                    <p className="text-xs font-black text-gray-900 truncate">
+                      ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </p>
+                  </div>
+                </div>
+                <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${percentage}%` }}
+                    className={`h-full ${cat.color.split(' ')[1].replace('text-', 'bg-')}`}
+                  />
+                </div>
+                <p className="text-[8px] font-bold text-gray-400 mt-2 flex justify-between uppercase tracking-widest">
+                  <span>Breakdown</span>
+                  <span>{Math.round(percentage)}%</span>
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Filters & Search */}
       <div className="bg-white p-2 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row gap-2">
         <div className="relative flex-1 group">
@@ -375,7 +427,7 @@ export default function History() {
         </div>
         
         <div className="flex overflow-x-auto pb-2 md:pb-0 gap-2 px-2 no-scrollbar">
-          {CATEGORIES.map(cat => (
+          {ALL_CATEGORIES.map(cat => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
@@ -392,106 +444,118 @@ export default function History() {
         </div>
       </div>
 
-      {/* Grid */}
-      {filteredReceipts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredReceipts.map((receipt, index) => (
-              <motion.div
-                layout
-                key={receipt.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => setSelectedReceiptId(selectedReceiptId === receipt.id ? null : receipt.id)}
-                className={`group bg-white rounded-[2.5rem] p-6 border transition-all duration-300 relative overflow-hidden flex flex-col cursor-pointer ${
-                  selectedReceiptId === receipt.id 
-                    ? 'border-blue-500 shadow-2xl shadow-blue-100 ring-4 ring-blue-50/50' 
-                    : 'border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 hover:border-b-blue-100 border-b-4 border-b-gray-50'
-                }`}
-              >
-                {/* Category Badge */}
-                <div className={`absolute top-6 right-6 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-tighter ${
-                  CATEGORIES.find(c => c.id === receipt.category)?.color || 'bg-gray-100 text-gray-600'
-                }`}>
-                  {receipt.category}
-                </div>
+      {/* Grid with Grouping */}
+      {Object.keys(groupedReceipts).length > 0 ? (
+        <div className="space-y-12">
+          {(Object.entries(groupedReceipts) as [string, Receipt[]][]).map(([month, items]) => (
+            <div key={month} className="space-y-6">
+              <div className="flex items-center gap-4 px-2">
+                <h2 className="text-lg font-black text-gray-900 tracking-tight">{month}</h2>
+                <div className="h-px flex-1 bg-gray-100" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{items.length} Receipts</span>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence mode="popLayout">
+                  {items.map((receipt, index) => (
+                    <motion.div
+                      layout
+                      key={receipt.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => setSelectedReceiptId(selectedReceiptId === receipt.id ? null : receipt.id)}
+                      className={`group bg-white rounded-[2.5rem] p-6 border transition-all duration-300 relative overflow-hidden flex flex-col cursor-pointer ${
+                        selectedReceiptId === receipt.id 
+                          ? 'border-blue-500 shadow-2xl shadow-blue-100 ring-4 ring-blue-50/50' 
+                          : 'border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 hover:border-b-blue-100 border-b-4 border-b-gray-50'
+                      }`}
+                    >
+                      {/* Category Badge */}
+                      <div className={`absolute top-6 right-6 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-tighter ${
+                        CATEGORIES.find(c => c.id === receipt.category)?.color || 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {receipt.category}
+                      </div>
 
-                <div className="flex items-start gap-4 mb-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
-                    selectedReceiptId === receipt.id ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500'
-                  }`}>
-                    {CATEGORIES.find(c => c.id === receipt.category)?.icon || <ReceiptIcon />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-gray-900 truncate pr-16">{receipt.merchantName}</h3>
-                    <div className="flex items-center gap-1.5 text-gray-400 text-sm font-medium mt-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {new Date(receipt.date).toLocaleDateString(undefined, { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4 flex-1">
-                  {receipt.summary && (
-                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 italic font-medium">
-                      "{receipt.summary}"
-                    </p>
-                  )}
-                  
-                  <AnimatePresence>
-                    {selectedReceiptId === receipt.id && receipt.lineItems && receipt.lineItems.length > 0 && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden border-t border-gray-100 pt-4 mt-4 space-y-2"
-                      >
-                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Line Items</h4>
-                        {receipt.lineItems.map((item, i) => (
-                          <div key={i} className="flex justify-between text-xs font-bold text-gray-600 bg-gray-50/50 p-2 rounded-lg">
-                            <span className="flex-1 truncate pr-2">{item.quantity}x {item.name}</span>
-                            <span className="text-gray-900">
-                              {CURRENCY_SYMBOLS[receipt.currency] || ''}{item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </span>
+                      <div className="flex items-start gap-4 mb-6">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
+                          selectedReceiptId === receipt.id ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500'
+                        }`}>
+                          {CATEGORIES.find(c => c.id === receipt.category)?.icon || <ReceiptIcon />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-black text-gray-900 truncate pr-16">{receipt.merchantName}</h3>
+                          <div className="flex items-center gap-1.5 text-gray-400 text-sm font-medium mt-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {new Date(receipt.date).toLocaleDateString(undefined, { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
                           </div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-50">
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      <span className="text-xs font-bold uppercase tracking-widest">Total</span>
-                    </div>
-                    <div className="text-xl font-black text-gray-900 flex items-baseline">
-                      <span className="text-sm font-bold opacity-50 mr-0.5">
-                        {CURRENCY_SYMBOLS[receipt.currency] || receipt.currency}
-                      </span>
-                      {receipt.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </div>
-                  </div>
-                </div>
+                      <div className="space-y-4 flex-1">
+                        {receipt.summary && (
+                          <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 italic font-medium">
+                            "{receipt.summary}"
+                          </p>
+                        )}
+                        
+                        <AnimatePresence>
+                          {selectedReceiptId === receipt.id && receipt.lineItems && receipt.lineItems.length > 0 && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden border-t border-gray-100 pt-4 mt-4 space-y-2"
+                            >
+                              <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Line Items</h4>
+                              {receipt.lineItems.map((item, i) => (
+                                <div key={i} className="flex justify-between text-xs font-bold text-gray-600 bg-gray-50/50 p-2 rounded-lg">
+                                  <span className="flex-1 truncate pr-2">{item.quantity}x {item.name}</span>
+                                  <span className="text-gray-900">
+                                    {CURRENCY_SYMBOLS[receipt.currency] || ''}{item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
 
-                <div className="mt-6 flex items-center justify-between">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest transition-colors">
-                    {selectedReceiptId === receipt.id ? 'Close Details' : 'View Details'}
-                  </span>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all transform ${
-                    selectedReceiptId === receipt.id ? 'bg-blue-600 text-white rotate-90' : 'bg-gray-50 text-gray-400 group-hover:bg-blue-600 group-hover:text-white group-hover:translate-x-1'
-                  }`}>
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                        <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-50">
+                          <div className="flex items-center gap-1 text-gray-400">
+                            <DollarSign className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold uppercase tracking-widest">Total</span>
+                          </div>
+                          <div className="text-xl font-black text-gray-900 flex items-baseline">
+                            <span className="text-sm font-bold opacity-50 mr-0.5">
+                              {CURRENCY_SYMBOLS[receipt.currency] || receipt.currency}
+                            </span>
+                            {receipt.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex items-center justify-between">
+                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest transition-colors">
+                          {selectedReceiptId === receipt.id ? 'Close Details' : 'View Details'}
+                        </span>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all transform ${
+                          selectedReceiptId === receipt.id ? 'bg-blue-600 text-white rotate-90' : 'bg-gray-50 text-gray-400 group-hover:bg-blue-600 group-hover:text-white group-hover:translate-x-1'
+                        }`}>
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <motion.div 

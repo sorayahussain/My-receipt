@@ -19,13 +19,15 @@ import {
   Heart,
   History as HistoryIcon,
   Check,
-  Scan
+  Scan,
+  Tag
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { CATEGORIES, CURRENCY_SYMBOLS } from '../constants';
 
 // --- Types ---
 
@@ -60,16 +62,7 @@ enum AppState {
 
 // --- Utilities ---
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  CAD: 'C$',
-  AUD: 'A$',
-  INR: '₹',
-  CNY: '¥',
-};
+const CURRENCY_SYMBOLS_LOCAL: Record<string, string> = CURRENCY_SYMBOLS;
 
 import { handleFirestoreError, OperationType } from '../lib/firebase-utils';
 
@@ -692,6 +685,29 @@ export default function Scanner() {
                 
                 {isEditing ? (
                   <form onSubmit={handleSave} className="space-y-6 flex-1">
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
+                        <Tag className="w-3 h-3" /> Category
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {CATEGORIES.map(cat => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleUpdateField('category', cat.id)}
+                            className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${
+                              receiptData.category === cat.id 
+                                ? `${cat.color} ${cat.border} ring-2 ring-blue-100` 
+                                : 'bg-gray-50 border-transparent text-gray-400 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className="mb-1">{cat.icon}</div>
+                            <span className="text-[10px] font-bold">{cat.id}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
                         <Building2 className="w-3 h-3" /> Merchant
@@ -860,9 +876,14 @@ export default function Scanner() {
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Merchant</p>
                         <p className="text-lg font-bold text-gray-900">{receiptData.merchantName || 'Unknown Merchant'}</p>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-wider border border-blue-100">
+                          <button 
+                            type="button"
+                            onClick={() => setIsEditing(true)}
+                            className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-wider border border-blue-100 hover:bg-blue-100 transition-colors flex items-center gap-1"
+                          >
+                            <Tag className="w-3 h-3" />
                             {receiptData.category}
-                          </span>
+                          </button>
                           {receiptData.summary && (
                             <span className="text-[10px] text-gray-500 font-medium italic truncate max-w-[200px]">
                               "{receiptData.summary}"

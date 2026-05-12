@@ -2,8 +2,6 @@
 
 Smart receipt scanner that extracts merchant, date, and total amount using Google's AI. MyReceipt is built for speed, security, and absolute user data ownership.
 
-<img src="assets/landingpage.png" alt="Landing Page Preview"/>
-
 ## ✨ Core Features
 
 ### 🧠 Explainable AI (XAI)
