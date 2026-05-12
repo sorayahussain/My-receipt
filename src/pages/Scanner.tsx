@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 // Removed Gemini imports as it's now handled server-side
+import { GoogleGenAI, Type } from '@google/genai';
 import { 
   Upload, 
   Receipt, 
@@ -179,18 +180,72 @@ export default function Scanner() {
   const extractDataWithAI = async (base64Data: string, mimeType: string) => {
     setState(AppState.EXTRACTING);
     try {
-      const response = await fetch('/api/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64Data, mimeType })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to connect to extraction service');
+      const apiKey = process.env.GEMINI_API_KEY;
+      
+      if (!apiKey || apiKey.trim() === "" || apiKey === "YOUR_GEMINI_API_KEY") {
+        throw new Error("missing");
       }
 
-      const parsedData = await response.json();
+      const ai = new GoogleGenAI({ apiKey });
+      const modelName = "gemini-3-flash-preview"; 
+      
+      console.log(`[AI] Extracting directly from frontend with ${modelName}`);
+      
+      const response = await ai.models.generateContent({
+        model: modelName, 
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: mimeType,
+              },
+            },
+            { text: "Extract data from this receipt. Return ONLY JSON." }
+          ]
+        },
+        config: {
+          systemInstruction: "You are a professional receipt scanner. Extract: merchant name, category, date (YYYY-MM-DD), currency (ISO 4217), total amount, and line items. Use clues like symbols or addresses to resolve currency ambiguity. If unusable, return an error field.",
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              error: {
+                type: Type.STRING,
+                description: "If unusable, provide a reason. Otherwise, leave empty.",
+              },
+              merchantName: { type: Type.STRING },
+              category: { type: Type.STRING },
+              summary: { type: Type.STRING },
+              merchantAddress: { type: Type.STRING },
+              date: { type: Type.STRING },
+              totalAmount: { type: Type.NUMBER },
+              currency: { type: Type.STRING },
+              currencyConfidence: { type: Type.NUMBER },
+              extractionReasoning: { type: Type.STRING },
+              lineItems: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    quantity: { type: Type.NUMBER },
+                    price: { type: Type.NUMBER }
+                  },
+                  required: ["name", "quantity", "price"]
+                }
+              }
+            },
+            required: ["merchantName", "category", "summary", "date", "totalAmount", "currency", "currencyConfidence", "extractionReasoning", "lineItems"],
+          }
+        }
+      });
+
+      if (!response.text) {
+        throw new Error("NO_RESPONSE");
+      }
+
+      const parsedData = JSON.parse(response.text.trim());
       
       if (parsedData.error) {
         throw new Error(parsedData.error);
@@ -205,6 +260,8 @@ export default function Scanner() {
       
       let message = "We couldn't read the receipt. Please try again with a clearer photo.";
       
+      const errorStr = (error.message || "").toLowerCase();
+      
       if (error.message === "BLURRY") {
         message = "The photo is a bit blurry. Try taking it again in better lighting.";
       } else if (error.message === "NOT_A_RECEIPT") {
@@ -215,8 +272,10 @@ export default function Scanner() {
         message = "The server didn't return any data. This might be a temporary connection issue.";
       } else if (error.name === "SyntaxError") {
         message = "There was a problem processing the receipt data. Please try another photo.";
-      } else if (error.message.includes('GEMINI_API_KEY')) {
-        message = "Server Configuration Error: The AI service is not correctly set up. Please contact the administrator.";
+      } else if (errorStr.includes('api key') || errorStr.includes('api_key') || errorStr.includes('invalid_argument')) {
+        message = "API Key Error: The Gemini AI service rejected the request. Please ensure GEMINI_API_KEY is correctly set in your Secrets.";
+      } else if (error.message === "missing") {
+        message = "Configuration Error: The Gemini API key is missing. Please add GEMINI_API_KEY to your Secrets menu.";
       }
       
       setErrorMessage(message);

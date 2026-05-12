@@ -58,15 +58,15 @@ Powered by **Gemini 3 Flash**, our scanning engine does more than just OCR. It u
 To deploy this application to Vercel:
 1. Push your code to a GitHub repository.
 2. Connect the repository to Vercel.
-3. **CRITICAL**: Add the following Environment Variables in your Vercel Project Settings:
-   - `GEMINI_API_KEY`: `AIzaSyCETDDLRu_sfHmysYmkobj48JuSeld97kI` (Google AI API Key)
-   - `VITE_FIREBASE_API_KEY`: `AIzaSyD1mZOqkB8vhh_Mat_xz8CJ3tByA1nExB4`
-   - `VITE_FIREBASE_AUTH_DOMAIN`: `gen-lang-client-0628889583.firebaseapp.com`
-   - `VITE_FIREBASE_PROJECT_ID`: `gen-lang-client-0628889583`
-   - `VITE_FIREBASE_STORAGE_BUCKET`: `gen-lang-client-0628889583.firebasestorage.app`
-   - `VITE_FIREBASE_MESSAGING_SENDER_ID`: `141638499711`
-   - `VITE_FIREBASE_APP_ID`: `1:141638499711:web:1058e08783f26cb214ee4a`
-   - `VITE_FIREBASE_DATABASE_ID`: `ai-studio-244b6cde-c019-4e43-9abc-018e262dbc1e`
+3. **CRITICAL**: Add the following Environment Variables in your Vercel Project Settings (values can be found in your Firebase and Google AI Console):
+   - `GEMINI_API_KEY`: YOUR_GEMINI_API_KEY
+   - `VITE_FIREBASE_API_KEY`: YOUR_FIREBASE_API_KEY
+   - `VITE_FIREBASE_AUTH_DOMAIN`: YOUR_AUTH_DOMAIN
+   - `VITE_FIREBASE_PROJECT_ID`: YOUR_PROJECT_ID
+   - `VITE_FIREBASE_STORAGE_BUCKET`: YOUR_STORAGE_BUCKET
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`: YOUR_SENDER_ID
+   - `VITE_FIREBASE_APP_ID`: YOUR_APP_ID
+   - `VITE_FIREBASE_DATABASE_ID`: YOUR_DATABASE_ID (Optional, usually `(default)`)
    - `APP_URL`: Your Vercel deployment URL (e.g., `https://your-app.vercel.app`)
 
 ```bash

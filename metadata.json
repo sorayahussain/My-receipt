@@ -1,5 +1,5 @@
 {
-  "name": "MyReceipt",
+  "name": "MyReceipt AI",
   "description": "Smart receipt scanner that extracts merchant, date, and total amount using Gemini AI.",
   "requestFramePermissions": [
     "camera"
